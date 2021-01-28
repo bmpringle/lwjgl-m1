@@ -352,9 +352,9 @@ final class MacOSXDisplay implements DisplayImplementation {
 	}
 
 	public void reshape(int x, int y, int width, int height) {
-        //if (native_mode) {
-        //    nResizeWindow(window, x, y, width, height);
-        //}
+        /*if (native_mode) {
+            nResizeWindow(window, x, y, width, height);
+        }*/
 	}
 
 	/* Mouse */

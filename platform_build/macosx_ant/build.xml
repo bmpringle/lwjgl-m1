@@ -52,16 +52,16 @@
 		<!-- Choose a MacOSX SDK -->
 		<property name="compiler" value="clang"/> <!-- Default to clang for 10.8 and up -->
 
-		<condition property="sdkroot" value="${developer_path}/${sdk_path}/MacOSX10.9.sdk">
+		<condition property="sdkroot" value="/Library/Developer/CommandLineTools/SDKs/MacOSX11.1.sdk/">
 			<and>
 				<not><isset property="sdkroot"/></not>
-				<available file="${developer_path}/${sdk_path}/MacOSX10.9.sdk" type="dir"/>
+				<available file="/Library/Developer/CommandLineTools/SDKs/MacOSX11.1.sdk/" type="dir"/>
 			</and>
 		</condition>
-		<condition property="sdkroot" value="${developer_path}/${sdk_path}/MacOSX10.8.sdk">
+		<condition property="sdkroot" value="/Library/Developer/CommandLineTools/SDKs/MacOSX11.1.sdk/">
 			<and>
 				<not><isset property="sdkroot"/></not>
-				<available file="${developer_path}/${sdk_path}/MacOSX10.8.sdk" type="dir"/>
+				<available file="/Library/Developer/CommandLineTools/SDKs/MacOSX11.1.sdk/" type="dir"/>
 			</and>
 		</condition>
 
@@ -110,8 +110,10 @@
 	</target>
 
 	<target name="compile" depends="init">
+		<property environment="env"/>
+		<echo message="JAVA_HOME: ${env.JAVA_HOME}"/>
 		<apply dir="${dstdir}" executable="${compiler}" os="Mac OS X" skipemptyfilesets="true" failonerror="true" dest="${dstdir}">
-			<arg line="${cflags} -ObjC -O2 -Wall -Wunused -c -fPIC -I${javavmroot}/${jvm_headers_path} -I${native}/common -I${native}/common/opengl -I${native}/macosx"/>
+			<arg line="${cflags} -ObjC -O2 -Wall -Wunused -c -fPIC -I${env.JAVA_HOME}/include -I${native}/common -I${native}/common/opengl -I${native}/macosx"/>
 			<!-- Map from *.m and *.c to .o -->
 			<mapper type="regexp" from="^(.*)\.(c|m)" to="\1.o"/>
 			<fileset dir="${native}/macosx" includes="*.m"/>
@@ -138,7 +140,7 @@
 		</apply>
 		<apply dir="${objdir}" executable="strip" os="Mac OS X" failonerror="true">
 			<arg line="-S -X"/>
-			<fileset dir="." file="${libname}"/>
+			<fileset dir="."/>
 		</apply>
 	</target>
 
@@ -170,7 +172,7 @@
 		<antcall target="compile">
 			<param name="dstdir" location="x86_64"/>
 			<param name="sdkroot" location="${universal_sdkroot}"/>
-			<param name="cflags" value="-isysroot ${x86_64_sdkroot} -arch x86_64 -mmacosx-version-min=10.5"/>
+			<param name="cflags" value="-isysroot ${x86_64_sdkroot} -arch arm64 -mmacosx-version-min=10.5"/>
 		</antcall>
 		<exec vmlauncher="true" executable="sh" output="lwjgl.symbols" failonerror="true">
 			<arg path="../../platform_build/macosx_ant/build-symbol-list"/>
@@ -184,7 +186,7 @@
 		<antcall target="link">
 			<param name="objdir" location="x86_64"/>
 			<param name="libname" value="liblwjgl-i86_64.dylib"/>
-			<param name="linkerflags" value="-isysroot ${x86_64_sdkroot} -arch x86_64 -mmacosx-version-min=10.5"/>
+			<param name="linkerflags" value="-isysroot ${x86_64_sdkroot} -arch arm64 -mmacosx-version-min=10.5"/>
 		</antcall>
 		<apply dir="." parallel="true" executable="lipo" os="Mac OS X" failonerror="true" skipemptyfilesets="true">
 			<arg value="-create"/>
@@ -200,7 +202,7 @@
 		<antcall target="compile">
 			<param name="dstdir" location="x86_64"/>
 			<param name="sdkroot" location="${sdkroot}"/>
-			<param name="cflags" value="-isysroot ${sdkroot} -arch x86_64 -mmacosx-version-min=10.5"/>
+			<param name="cflags" value="-isysroot ${sdkroot} -arch arm64 -mmacosx-version-min=10.5"/>
 		</antcall>
 		<exec vmlauncher="true" executable="sh" output="lwjgl.symbols" failonerror="true">
 			<arg path="../../platform_build/macosx_ant/build-symbol-list"/>
@@ -209,7 +211,7 @@
 		<antcall target="link">
 			<param name="objdir" location="x86_64"/>
 			<param name="libname" value="liblwjgl-i86_64.dylib"/>
-			<param name="linkerflags" value="-isysroot ${sdkroot} -arch x86_64 -mmacosx-version-min=10.5"/>
+			<param name="linkerflags" value="-isysroot ${sdkroot} -arch arm64 -mmacosx-version-min=10.5"/>
 		</antcall>
 		<apply dir="." parallel="true" executable="lipo" os="Mac OS X" failonerror="true" skipemptyfilesets="true">
 			<arg value="-create"/>
