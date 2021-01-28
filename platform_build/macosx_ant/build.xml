@@ -110,8 +110,10 @@
 	</target>
 
 	<target name="compile" depends="init">
+		<property environment="env"/>
+		<echo message="JAVA_HOME: ${env.JAVA_HOME}"/>
 		<apply dir="${dstdir}" executable="${compiler}" os="Mac OS X" skipemptyfilesets="true" failonerror="true" dest="${dstdir}">
-			<arg line="${cflags} -ObjC -O2 -Wall -Wunused -c -fPIC -I/Users/bmp/Desktop/zulu-jdk8-arm64/include/ -I${native}/common -I${native}/common/opengl -I${native}/macosx"/>
+			<arg line="${cflags} -ObjC -O2 -Wall -Wunused -c -fPIC -I${env.JAVA_HOME}/include -I${native}/common -I${native}/common/opengl -I${native}/macosx"/>
 			<!-- Map from *.m and *.c to .o -->
 			<mapper type="regexp" from="^(.*)\.(c|m)" to="\1.o"/>
 			<fileset dir="${native}/macosx" includes="*.m"/>

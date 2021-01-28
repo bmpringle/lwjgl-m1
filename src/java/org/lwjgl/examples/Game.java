@@ -29,6 +29,8 @@
  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+package org.lwjgl.examples;
+
 import org.lwjgl.Sys;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.openal.AL;
@@ -90,8 +92,8 @@ public class Game {
 		// Create a fullscreen window with 1:1 orthographic 2D projection, and with
 		// mouse, keyboard, and gamepad inputs.
 		Display.setTitle(GAME_TITLE);
-		Display.setResizable(true);
-		Display.setDisplayMode(new DisplayMode(500, 500));
+		Display.setFullscreen(true);
+
 		// Enable vsync if we can
 		Display.setVSyncEnabled(true);
 
@@ -106,10 +108,10 @@ public class Game {
 		// We haven't used GLU here to do this to avoid an unnecessary dependency.
 		glMatrixMode(GL_PROJECTION);
 		glLoadIdentity();
-		glOrtho(0.0, Display.getWidth() * 2, 0.0, Display.getHeight() * 2, -1.0, 1.0);
+		glOrtho(0.0, Display.getDisplayMode().getWidth(), 0.0, Display.getDisplayMode().getHeight(), -1.0, 1.0);
 		glMatrixMode(GL_MODELVIEW);
 		glLoadIdentity();
-		glViewport(0, 0, Display.getWidth() * 2, Display.getHeight() * 2);
+		glViewport(0, 0, Display.getDisplayMode().getWidth(), Display.getDisplayMode().getHeight());
 
 	}
 
@@ -118,9 +120,6 @@ public class Game {
 	 */
 	private static void run() {
 		while (!finished) {
-			if(Display.wasResized()) {
-				glViewport(0, 0, Display.getWidth() * 2, Display.getHeight() * 2);
-			}
 			// Always call Window.update(), all the time
 			Display.update();
 
@@ -183,7 +182,7 @@ public class Game {
 		// TODO: all your rendering goes here
 		glClear(GL_COLOR_BUFFER_BIT);
 		glPushMatrix();
-		glTranslatef(Display.getWidth() / 2, Display.getDisplayMode().getHeight() / 2, 0.0f);
+		glTranslatef(Display.getDisplayMode().getWidth() / 2, Display.getDisplayMode().getHeight() / 2, 0.0f);
 		glRotatef(angle, 0, 0, 1.0f);
 		glBegin(GL_QUADS);
 		glVertex2i(-50, -50);

@@ -47,9 +47,6 @@
 #include "context.h"
 #include "common_tools.h"
 
-#include <stdio.h>
-#include <stdlib.h>
-
 JNIEXPORT jobject JNICALL Java_org_lwjgl_opengl_MacOSXCanvasPeerInfo_nInitHandle
 (JNIEnv *env, jclass clazz, jobject lock_buffer_handle, jobject peer_info_handle, jobject window_handle, jboolean forceCALayer, jboolean autoResizable, jint x, jint y) {
 	NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];

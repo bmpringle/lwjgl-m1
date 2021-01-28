@@ -39,11 +39,6 @@
 
 #import <CoreFoundation/CoreFoundation.h>
 #import "context.h"
-#import <OpenGL/OpenGL.h>
-#import <OpenGL/gl.h>
-
-#include <stdio.h>
-#include <stdlib.h>
 
 static CFBundleRef opengl_bundle = NULL;
 
