@@ -1,4 +1,4 @@
-[LEGACY] LWJGL - Lightweight Java Game Library
+[LEGACY] LWJGL-m1 - A forked version of the Lightweight Java Game Library
 ======
 
 > **WARNING**
@@ -22,3 +22,10 @@ LWJGL requires a JDK and Ant installed to compile, as well as your platforms nat
 * ant generate-all
 * ant compile
 * ant compile_native
+
+Fork
+-----
+This fork of LWJGL was created to update it as necessary to work on the ARM64 architecture of the new M1 Macs.
+
+###### List of known fork issues:
+-resizing window dynamically (not a fullscreen/minimize) causes random crashes in native OpenGL code. 
