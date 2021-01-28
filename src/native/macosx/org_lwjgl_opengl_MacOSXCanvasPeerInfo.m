@@ -41,11 +41,14 @@
 
 #import <Cocoa/Cocoa.h>
 #include <jni.h>
-#include <jawt_md.h>
+#include <darwin/jawt_md.h>
 #include "awt_tools.h"
 #include "org_lwjgl_opengl_MacOSXCanvasPeerInfo.h"
 #include "context.h"
 #include "common_tools.h"
+
+#include <stdio.h>
+#include <stdlib.h>
 
 JNIEXPORT jobject JNICALL Java_org_lwjgl_opengl_MacOSXCanvasPeerInfo_nInitHandle
 (JNIEnv *env, jclass clazz, jobject lock_buffer_handle, jobject peer_info_handle, jobject window_handle, jboolean forceCALayer, jboolean autoResizable, jint x, jint y) {
@@ -53,7 +56,7 @@ JNIEXPORT jobject JNICALL Java_org_lwjgl_opengl_MacOSXCanvasPeerInfo_nInitHandle
 	
 	MacOSXPeerInfo *peer_info = (MacOSXPeerInfo *)(*env)->GetDirectBufferAddress(env, peer_info_handle);
 	AWTSurfaceLock *surface = (AWTSurfaceLock *)(*env)->GetDirectBufferAddress(env, lock_buffer_handle);
-	JAWT_MacOSXDrawingSurfaceInfo *macosx_dsi = (JAWT_MacOSXDrawingSurfaceInfo *)surface->dsi->platformInfo;
+    JAWT_DrawingSurfaceInfo *macosx_dsi = (JAWT_DrawingSurfaceInfo *)surface->dsi->platformInfo;
 	
 	// force CALayer usage or check if CALayer is supported (i.e. on Java 5 and Java 6)
 	if(forceCALayer || (surface->awt.version & 0x80000000)) { //JAWT_MACOSX_USE_CALAYER) {
@@ -83,8 +86,10 @@ JNIEXPORT jobject JNICALL Java_org_lwjgl_opengl_MacOSXCanvasPeerInfo_nInitHandle
 			/* we set bounds as requested w/ frame function */
                         peer_info->glLayer.frame = CGRectMake(x, y, surface->dsi->bounds.width, surface->dsi->bounds.height);
 			
-			[peer_info->glLayer performSelectorOnMainThread:@selector(createWindow:) withObject:peer_info->pixel_format waitUntilDone:YES];
-			
+			dispatch_sync(dispatch_get_main_queue(), ^{
+				[peer_info->glLayer createWindow:peer_info->pixel_format];
+			});
+
 			peer_info->isCALayer = true;
 			peer_info->isWindowed = true;
 			peer_info->parent = nil;
@@ -95,9 +100,9 @@ JNIEXPORT jobject JNICALL Java_org_lwjgl_opengl_MacOSXCanvasPeerInfo_nInitHandle
 	}
 	
 	// no CALayer support, fallback to using legacy method of getting the NSView of an AWT Canvas
-	peer_info->parent = macosx_dsi->cocoaViewRef;
+	/*peer_info->parent = macosx_dsi->cocoaViewRef;
 	peer_info->isCALayer = false;
-	peer_info->isWindowed = true;
+	peer_info->isWindowed = true;*/
 	
 	[pool release];
 	return NULL;
@@ -110,7 +115,9 @@ JNIEXPORT void JNICALL Java_org_lwjgl_opengl_MacOSXCanvasPeerInfo_nSetLayerPosit
 	if (peer_info->glLayer != nil) {
 		NSPoint point = NSMakePoint(x, y);
 		NSValue *value = [NSValue valueWithPoint:point];
-		[peer_info->glLayer performSelectorOnMainThread:@selector(updatePosition:) withObject:value waitUntilDone:NO];
+		dispatch_sync(dispatch_get_main_queue(), ^{
+			[peer_info->glLayer updatePosition:value];
+		});
 	}
 }
 
@@ -121,7 +128,9 @@ JNIEXPORT void JNICALL Java_org_lwjgl_opengl_MacOSXCanvasPeerInfo_nSetLayerBound
 	if (peer_info->glLayer != nil) {
 		NSRect rect = NSMakeRect(x, y, width, height);
 		NSValue *value = [NSValue valueWithRect:rect];
-		[peer_info->glLayer performSelectorOnMainThread:@selector(updateBounds:) withObject:value waitUntilDone:NO];
+		dispatch_sync(dispatch_get_main_queue(), ^{
+			[peer_info->glLayer updateBounds:value];
+		});
 	}
 }
 

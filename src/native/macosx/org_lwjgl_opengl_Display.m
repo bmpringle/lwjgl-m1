@@ -71,6 +71,8 @@ static NSUInteger lastModifierFlags = 0;
 	int height = window_info->display_rect.size.height;
 	
 	NSRect view_rect = NSMakeRect(0.0, 0.0, width, height);
+
+
 	window_info->view = [[MacOSXOpenGLView alloc] initWithFrame:view_rect pixelFormat:peer_info->pixel_format];
 	[window_info->view setAutoresizingMask:NSViewWidthSizable | NSViewHeightSizable];
 
@@ -79,7 +81,9 @@ static NSUInteger lastModifierFlags = 0;
 	
 	if (window_info->enableHighDPI) {
 		// call method using runtime selector as its a 10.7+ api and allows compiling on older SDK's
-		[window_info->view performSelector:NSSelectorFromString(@"setWantsBestResolutionOpenGLSurface:") withObject:YES];
+		[window_info->view setWantsBestResolutionOpenGLSurface:YES];
+	}else {
+		[window_info->view setWantsBestResolutionOpenGLSurface:NO];
 	}
 	
 	// set nsapp delegate for catching app quit events
@@ -110,7 +114,7 @@ static NSUInteger lastModifierFlags = 0;
 			window_info->window = [[MacOSXKeyableWindow alloc] initWithContentRect:window_info->display_rect styleMask:default_window_mask backing:NSBackingStoreBuffered defer:NO];
 			
 			[window_info->window setContentView:window_info->view];
-			[window_info->window setContentView:window_info->view]; // call twice to fix issue
+			//[window_info->window setContentView:window_info->view]; // call twice to fix issue
 			
 			// set NSView as delegate of NSWindow to get windowShouldClose events
 			[window_info->window setDelegate:window_info->view];
@@ -593,8 +597,10 @@ JNIEXPORT jboolean JNICALL Java_org_lwjgl_opengl_MacOSXDisplay_nIsFocused(JNIEnv
 JNIEXPORT void JNICALL Java_org_lwjgl_opengl_MacOSXDisplay_nResizeWindow(JNIEnv *env, jobject this, jobject window_handle, jint x, jint y, jint width, jint height) {
 	MacOSXWindowInfo *window_info = (MacOSXWindowInfo *)(*env)->GetDirectBufferAddress(env, window_handle);
 	window_info->display_rect = NSMakeRect(x, y, width, height);
-	[window_info->window setFrame:window_info->display_rect display:false];
-	[window_info->view update];
+	dispatch_sync(dispatch_get_main_queue(), ^{
+		[window_info->window setFrame:window_info->display_rect display:false];
+		[window_info->view update];
+	});
 }
 
 JNIEXPORT jboolean JNICALL Java_org_lwjgl_opengl_MacOSXDisplay_nWasResized(JNIEnv *env, jobject this, jobject window_handle) {
@@ -619,30 +625,36 @@ JNIEXPORT jint JNICALL Java_org_lwjgl_opengl_MacOSXDisplay_nGetHeight(JNIEnv *en
 JNIEXPORT void JNICALL Java_org_lwjgl_opengl_MacOSXDisplay_nSetResizable(JNIEnv *env, jobject this, jobject window_handle, jboolean resizable) {
 	MacOSXWindowInfo *window_info = (MacOSXWindowInfo *)(*env)->GetDirectBufferAddress(env, window_handle);
 	NSUInteger style_mask = [window_info->window styleMask];
+	
 	if (resizable == true) {
 		style_mask |= NSResizableWindowMask;
 	} else {
 		style_mask &= ~NSResizableWindowMask;
 	}
-	[window_info->window setStyleMask:style_mask];
 
-	if (window_info->enableFullscreenModeAPI) {
-		if (resizable) {
-			// manually create OS X 10.7+ mask to allow compilation on previous OS X versions
-			NSUInteger NSWindowCollectionBehaviorFullScreenPrimary = 1 << 7;
-			[window_info->window setCollectionBehavior:NSWindowCollectionBehaviorFullScreenPrimary];
-		}
-		else {
-			// manually create OS X 10.7+ mask to allow compilation on previous OS X versions
-			NSUInteger NSFullScreenWindowMask = 1 << 14;
-			// on disabling resizing exit fullscreen mode exit otherwise will be stuck in it
-			if ((style_mask & NSFullScreenWindowMask) == NSFullScreenWindowMask) {
-				// call method using runtime selector as its a 10.7+ api and allows compiling on older SDK's
-				[window_info->window performSelector:NSSelectorFromString(@"toggleFullScreen:") withObject:nil];
+	// manually create OS X 10.7+ mask to allow compilation on previous OS X versions
+	NSUInteger NSWindowCollectionBehaviorFullScreenPrimary = 1 << 7;
+
+	// manually create OS X 10.7+ mask to allow compilation on previous OS X versions
+	NSUInteger NSFullScreenWindowMask = 1 << 14;
+	
+	dispatch_sync(dispatch_get_main_queue(), ^{
+		[window_info->window setStyleMask:style_mask];
+
+		if (window_info->enableFullscreenModeAPI) {
+			if (resizable) {
+				[window_info->window setCollectionBehavior:NSWindowCollectionBehaviorFullScreenPrimary];
 			}
-			[window_info->window setCollectionBehavior:NSWindowCollectionBehaviorDefault];
+			else {
+				// on disabling resizing exit fullscreen mode exit otherwise will be stuck in it
+				if ((style_mask & NSFullScreenWindowMask) == NSFullScreenWindowMask) {
+					// call method using runtime selector as its a 10.7+ api and allows compiling on older SDK's
+					[window_info->window performSelector:NSSelectorFromString(@"toggleFullScreen:") withObject:nil];
+				}
+				[window_info->window setCollectionBehavior:NSWindowCollectionBehaviorDefault];
+			}
 		}
-	}
+	});
 }
 
 JNIEXPORT jint JNICALL Java_org_lwjgl_opengl_MacOSXDisplay_nGetX(JNIEnv *env, jobject this, jobject window_handle) {
@@ -728,12 +740,14 @@ JNIEXPORT void JNICALL Java_org_lwjgl_opengl_MacOSXDisplay_nDestroyWindow(JNIEnv
 
 JNIEXPORT void JNICALL Java_org_lwjgl_opengl_MacOSXDisplay_nDestroyCALayer(JNIEnv *env, jobject this, jobject peer_info_handle) {
 	MacOSXPeerInfo *peer_info = (MacOSXPeerInfo *)(*env)->GetDirectBufferAddress(env, peer_info_handle);
-	if (peer_info->isCALayer) {
-		peer_info->isCALayer = false;
-		[peer_info->glLayer performSelectorOnMainThread:@selector(removeLayer) withObject:nil waitUntilDone:YES];
-		[peer_info->glLayer release];
-        peer_info->glLayer = nil;
-	}
+	dispatch_sync(dispatch_get_main_queue(), ^{
+		if (peer_info->isCALayer) {
+			peer_info->isCALayer = false;
+			[peer_info->glLayer removeLayer];
+			[peer_info->glLayer release];
+			peer_info->glLayer = nil;
+		}
+	});
 }
 
 JNIEXPORT jboolean JNICALL Java_org_lwjgl_opengl_MacOSXDisplay_nIsNativeMode(JNIEnv *env, jobject this, jobject peer_info_handle) {

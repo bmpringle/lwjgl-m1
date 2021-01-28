@@ -29,12 +29,11 @@
  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package org.lwjgl.examples;
-
 import org.lwjgl.Sys;
 import org.lwjgl.input.Keyboard;
 import org.lwjgl.openal.AL;
 import org.lwjgl.opengl.Display;
+import org.lwjgl.opengl.DisplayMode;
 
 import static org.lwjgl.opengl.GL11.*;
 
@@ -57,8 +56,8 @@ public class Game {
 	/** Exit the game */
 	private static boolean finished;
 
-  /** A rotating square! */
-  private static float  angle;
+  	/** A rotating square! */
+  	private static float  angle;
 
 	/**
 	 * No constructor needed - this class is static
@@ -90,13 +89,13 @@ public class Game {
 	private static void init() throws Exception {
 		// Create a fullscreen window with 1:1 orthographic 2D projection, and with
 		// mouse, keyboard, and gamepad inputs.
-    Display.setTitle(GAME_TITLE);
-    Display.setFullscreen(true);
+		Display.setTitle(GAME_TITLE);
+		Display.setResizable(true);
+		Display.setDisplayMode(new DisplayMode(500, 500));
+		// Enable vsync if we can
+		Display.setVSyncEnabled(true);
 
-    // Enable vsync if we can
-    Display.setVSyncEnabled(true);
-
-    Display.create();
+		Display.create();
 
 		// Start up the sound system
 		AL.create();
@@ -107,10 +106,10 @@ public class Game {
 		// We haven't used GLU here to do this to avoid an unnecessary dependency.
 		glMatrixMode(GL_PROJECTION);
 		glLoadIdentity();
-		glOrtho(0.0, Display.getDisplayMode().getWidth(), 0.0, Display.getDisplayMode().getHeight(), -1.0, 1.0);
+		glOrtho(0.0, Display.getWidth() * 2, 0.0, Display.getHeight() * 2, -1.0, 1.0);
 		glMatrixMode(GL_MODELVIEW);
 		glLoadIdentity();
-		glViewport(0, 0, Display.getDisplayMode().getWidth(), Display.getDisplayMode().getHeight());
+		glViewport(0, 0, Display.getWidth() * 2, Display.getHeight() * 2);
 
 	}
 
@@ -119,6 +118,9 @@ public class Game {
 	 */
 	private static void run() {
 		while (!finished) {
+			if(Display.wasResized()) {
+				glViewport(0, 0, Display.getWidth() * 2, Display.getHeight() * 2);
+			}
 			// Always call Window.update(), all the time
 			Display.update();
 
@@ -168,8 +170,8 @@ public class Game {
 			finished = true;
 		}
 
-    // TODO: all your game logic goes here.
-    angle += 2.0f % 360;
+		// TODO: all your game logic goes here.
+		angle += 2.0f % 360;
 	}
 
 	/**
@@ -178,17 +180,17 @@ public class Game {
 	private static void render() {
 		glClear(GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
-    // TODO: all your rendering goes here
-    glClear(GL_COLOR_BUFFER_BIT);
-    glPushMatrix();
-    glTranslatef(Display.getDisplayMode().getWidth() / 2, Display.getDisplayMode().getHeight() / 2, 0.0f);
-    glRotatef(angle, 0, 0, 1.0f);
-    glBegin(GL_QUADS);
-    glVertex2i(-50, -50);
-    glVertex2i(50, -50);
-    glVertex2i(50, 50);
-    glVertex2i(-50, 50);
-    glEnd();
-    glPopMatrix();
+		// TODO: all your rendering goes here
+		glClear(GL_COLOR_BUFFER_BIT);
+		glPushMatrix();
+		glTranslatef(Display.getWidth() / 2, Display.getDisplayMode().getHeight() / 2, 0.0f);
+		glRotatef(angle, 0, 0, 1.0f);
+		glBegin(GL_QUADS);
+		glVertex2i(-50, -50);
+		glVertex2i(50, -50);
+		glVertex2i(50, 50);
+		glVertex2i(-50, 50);
+		glEnd();
+		glPopMatrix();
 	}
 }

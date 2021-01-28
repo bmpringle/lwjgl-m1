@@ -48,7 +48,7 @@
 #include <OpenGL/gl.h>
 #include <OpenGL/glext.h>
 #include "common_tools.h"
-#include <jawt_md.h>
+#include <darwin/jawt_md.h>
 
 enum {
 	NSControlLeftKeyMask =      0x0001,
@@ -117,7 +117,7 @@ typedef struct {
 
 @interface GLLayer : CAOpenGLLayer {
 	@public
-	JAWT_MacOSXDrawingSurfaceInfo *macosx_dsi;
+    JAWT_DrawingSurfaceInfo *macosx_dsi;
 	JAWT_Rectangle canvasBounds;
 	MacOSXWindowInfo *window_info;
 	bool setViewport;

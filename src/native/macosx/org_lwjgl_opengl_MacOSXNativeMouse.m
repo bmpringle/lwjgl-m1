@@ -161,10 +161,14 @@ JNIEXPORT void JNICALL Java_org_lwjgl_opengl_MacOSXNativeMouse_nDestroyCursor(JN
 JNIEXPORT void JNICALL Java_org_lwjgl_opengl_MacOSXNativeMouse_nSetCursor(JNIEnv *env, jobject _this, jlong cursor_pointer) {
 	if (cursor_pointer == 0) {
 		// restore default cursor
-		[[NSCursor arrowCursor] performSelectorOnMainThread:@selector(set) withObject:nil waitUntilDone:NO];
+		dispatch_sync(dispatch_get_main_queue(), ^{
+			[[NSCursor arrowCursor] set];
+		});
 	}
 	else {
 		NSCursor *cursor = (NSCursor *)cursor_pointer;
-		[cursor performSelectorOnMainThread:@selector(set) withObject:nil waitUntilDone:NO];
+		dispatch_sync(dispatch_get_main_queue(), ^{
+			[cursor set];
+		});
 	}
 }

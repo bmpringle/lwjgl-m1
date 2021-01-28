@@ -40,7 +40,7 @@
 
 #include <jni.h>
 #ifdef __MACH__
-#include <JavaVM/jawt_md.h>
+#include <darwin/jawt_md.h>
 #else
 #include <jawt_md.h>
 #endif
