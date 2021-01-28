@@ -23,8 +23,9 @@ LWJGL requires a JDK and Ant installed to compile, as well as your platforms nat
 * ant compile
 * ant compile_native
 
-# Fork
+Fork
+-----
 This fork of LWJGL was created to update it as necessary to work on the ARM64 architecture of the new M1 Macs.
 
 ###### List of known fork issues:
--resizing window dynamically (not a fullscreen/minimize) causes random crashes in native OpenGL code. The current cause is not known.
+-resizing window dynamically (not a fullscreen/minimize) causes random crashes in native OpenGL code. 
